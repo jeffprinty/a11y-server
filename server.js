@@ -5,6 +5,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const shortid = require('shortid');
+require('dotenv').config()
 
 //and create our instances
 const app = express();
@@ -13,7 +14,7 @@ const router = express.Router();
 //it up, or 3001
 const port = process.env.API_PORT || 3001;
 
-mongoose.connect('a11y:a11yr12y@ds155028.mlab.com:55028/a11yassessment');
+mongoose.connect(process.env.MONGODB_URI);
 
 //now we should configure the API to use bodyParser and look for 
 //JSON data in the request body
