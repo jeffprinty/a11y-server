@@ -4,12 +4,13 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const short = require('shortid');
 const path = require('path');
+require('dotenv').config()
 
 const app = express();
 const router = express.Router();
 const port = process.env.API_PORT || 3001;
 
-mongoose.connect('a11y:a11yr12y@ds155028.mlab.com:55028/a11yassessment');
+mongoose.connect(proces.env.MONGODB_URI);
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
