@@ -4,7 +4,6 @@
   "description": "",
   "main": "server.js",
   "dependencies": {
-    "b": "^2.0.1",
     "babel-cli": "^6.24.1",
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-stage-2": "^6.24.1",
@@ -16,7 +15,9 @@
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon server.js --exec babel-node --presets es2015,stage-2"
+    "start": "nodemon server.js --exec babel-node --presets es2015,stage-2",
+    "mount": "mkdir ~/dev/_www && sshfs -o IdentityFile=~/dev/_keys/a11y-dashboard.pem ubuntu@54.70.239.42:/var/www ~/dev/_www -o auto_cache -ovolname=www",
+    "unmount": "umount -f /Users/jeffprinty/dev/_www/ && rm -rf ~/dev/_www"
   },
   "repository": {
     "type": "git",
