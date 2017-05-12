@@ -23,6 +23,7 @@ const AssessmentSchema = new Schema({
  title: String,
  shortId: String,
  checkValues: Array,
+ checkedItems: Array,
  notes: Array,
  team: String,
  createdAt: Date,
@@ -91,7 +92,7 @@ router.post('/new', (req, res) => {
   })
 });
 router.post('/update/:id', (req, res) => {
-  console.log("req.params.shortId", req.params.id, req.body.text);
+  console.log("Update:", req.params.id);
   Assessment.findOneAndUpdate({shortId: req.params.id}, req.body, function(err,doc) {
     if (err) {
       res.send(err);
@@ -148,7 +149,7 @@ function getTeams() {
 
 router.get('/:id', (req, res) => {
   Assessment.findOne({shortId: req.params.id}, (err, doc) => {
-    const { checkValues, title, url, shortId, team } = doc;
+    const { checkValues, checkedItems, title, url, shortId, team } = doc;
     Team.find({}, (err,teamData) => {
       res.json({
         checkValues, title, url, shortId, team,
