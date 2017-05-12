@@ -1,23 +1,16 @@
-//server.js
 'use strict'
-//first we import our dependencies…
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const shortid = require('shortid');
-require('dotenv').config()
+const short = require('shortid');
+const path = require('path');
 
-//and create our instances
 const app = express();
 const router = express.Router();
-//set our port to either a predetermined port number if you have set 
-//it up, or 3001
 const port = process.env.API_PORT || 3001;
 
-mongoose.connect(process.env.MONGODB_URI);
+mongoose.connect('a11y:a11yr12y@ds155028.mlab.com:55028/a11yassessment');
 
-//now we should configure the API to use bodyParser and look for 
-//JSON data in the request body
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
@@ -29,14 +22,27 @@ const AssessmentSchema = new Schema({
  title: String,
  shortId: String,
  checkValues: Array,
- notes: Array
+ notes: Array,
+ team: String,
+ createdAt: Date,
+ updatedAt: Date
 });
+const TeamSchema = new Schema({
+  name: String,
+  url: String,
+  shortId: String,
+  createdAt: Date
+})
+const AssessmentDefaults = {
+  checkValues: ['onlyBLAR','phase1','phase2','phase3','phase4','dev','UX','content','media','live'],
+  title: 'New Assessment'
+};
 
 const Assessment = mongoose.model('Assessment', AssessmentSchema)
+const Team = mongoose.model('Team', TeamSchema)
 
 function addAssessment(req,res) {
-  console.log("req", req.body);
-  const assessment = new Assessment({...req.body})
+  const assessment = new Assessment(req.body);
   assessment.save(function(err) {
     if (err) {
       res.send(err);
@@ -45,25 +51,36 @@ function addAssessment(req,res) {
     }
   })
 }
-//To prevent errors from Cross Origin Resource Sharing, we will set 
-//our headers to allow CORS with middleware like so:
 app.use(function(req, res, next) {
-  res.setHeader('Access-Control-Allow-Origin', ' * ');
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS, POST, PUT, DELETE');
   res.setHeader('Access-Control-Allow-Headers', 'Access-Control-Allow-Headers, Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers');
-  //and remove cacheing so we get the most recent comments
   res.setHeader('Cache-Control', 'no-cache');
   next();
 });
-//now we can set the route path & initialize the API
 router.get('/', function(req, res) {
-  res.json({ message: 'API Initialized!' });
+  Assessment.find({}, (err, docs) => {
+    console.log("err", err);
+    res.json(docs)
+  });
 });
 
 router.post('/new', (req, res) => {
-  const shortId = shortid.generate();
-  const assessment = new Assessment({shortId, ...req.body})
+  const {
+    url,
+    title,
+    checkValues,
+    notes
+  } = req.body;
+  const shortId = short.generate();
+  const assessment = new Assessment({
+    url,
+    title,
+    shortId,
+    checkValues,
+    notes
+  })
   assessment.save(function(err) {
     if (err) {
       res.send(err);
@@ -74,19 +91,76 @@ router.post('/new', (req, res) => {
 });
 router.post('/update/:id', (req, res) => {
   console.log("req.params.shortId", req.params.id, req.body.text);
-  Assessment.findOneAndUpdate({shortId: req.params.id}, {...req.body}, function(err,doc) {
+  Assessment.findOneAndUpdate({shortId: req.params.id}, req.body, function(err,doc) {
     if (err) {
       res.send(err);
     } else {
-      console.log("doc", doc);
       res.send('successfully updated');
     }
   })
 });
+router.get('/create', (req, res) => {
+  const shortId = short.generate();
+  const now = Date.now();
+  const newAssessment = Object.assign({}, AssessmentDefaults, {
+    shortId,
+    updatedAt: now,
+    createdAt: now
+  })
+  const assessment = new Assessment( newAssessment );
+  assessment.save(err => {
+    if (err) res.send(err);
+    res.redirect(`/${shortId}`);
+  })
+});
+router.post('/team/new', (req, res) => {
+  console.log('new team created:',req.body.name);
+  const shortId = short.generate();
+  const now = Date.now();
+  const team = new Team({
+    shortId,
+    name: req.body.name,
+    createdAt: now
+  });
+  team.save(err => {
+    if (err) res.send(err);
+    Team.find({}, (err,teamData) => {
+      teams = teamData
+    })
+    res.json(team);
+  })
+});
 
-//Use our router configuration when we call /api
+let teams = null;
+function getTeams() {
+  if (teams === null) {
+    console.log('teams not set, refreshing teams');
+    Team.find({}, (err,teamData) => {
+      teams = teamData
+      return teams
+    })
+  } else {
+    return teams;
+  }
+}
+
+router.get('/:id', (req, res) => {
+  Assessment.findOne({shortId: req.params.id}, (err, doc) => {
+    res.json(
+      Object.assign({}, doc, {
+        teams: getTeams()
+      })
+    );
+  })
+});
 app.use('/api', router);
-//starts the server and listens for requests
+
+const mainPage = (req, res) => res.sendFile(path.resolve(__dirname, '.', '../a11y-checklist/build', 'index.html'));
+
+app.use('/', express.static(path.join(__dirname, '../a11y-checklist/build')))
+app.get('/', mainPage);
+app.get('/:id', mainPage);
+
 app.listen(port, function() {
     console.log(`api running on port ${port}`);
 });

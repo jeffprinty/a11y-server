@@ -1,0 +1,10 @@
+{
+  "apps" : [{
+    "name"        : "mla11y",
+    "script"      : "./server.js",
+    "watch"       : true,
+    "exec_interpreter" : "babel-node",
+    "exec_mode"        : "fork",
+    "node_args" : "--harmony"
+  }]
+}
