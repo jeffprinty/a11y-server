@@ -148,12 +148,12 @@ function getTeams() {
 
 router.get('/:id', (req, res) => {
   Assessment.findOne({shortId: req.params.id}, (err, doc) => {
+    const { checkValues, title, url, shortId, team } = doc;
     Team.find({}, (err,teamData) => {
-      res.json(
-        Object.assign({}, doc, {
-          teams: teamData
-        })
-      );
+      res.json({
+        checkValues, title, url, shortId, team,
+        teams: teamData,
+      });
     });
   })
 });
