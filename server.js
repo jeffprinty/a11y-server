@@ -152,7 +152,7 @@ router.get('/:id', (req, res) => {
     const { checkValues, checkedItems, title, url, shortId, team } = doc;
     Team.find({}, (err,teamData) => {
       res.json({
-        checkValues, title, url, shortId, team,
+        checkValues, checkedItems, title, url, shortId, team,
         teams: teamData,
       });
     });
