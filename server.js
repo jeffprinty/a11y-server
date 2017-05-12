@@ -137,6 +137,7 @@ function getTeams() {
   if (teams === null) {
     console.log('teams not set, refreshing teams');
     Team.find({}, (err,teamData) => {
+      console.log("teamData", teamData);
       teams = teamData
       return teams
     })
@@ -147,11 +148,13 @@ function getTeams() {
 
 router.get('/:id', (req, res) => {
   Assessment.findOne({shortId: req.params.id}, (err, doc) => {
-    res.json(
-      Object.assign({}, doc, {
-        teams: getTeams()
-      })
-    );
+    Team.find({}, (err,teamData) => {
+      res.json(
+        Object.assign({}, doc, {
+          teams: teamData
+        })
+      );
+    });
   })
 });
 app.use('/api', router);
