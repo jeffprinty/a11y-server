@@ -10,7 +10,9 @@
     "body-parser": "^1.17.1",
     "dotenv": "^4.0.0",
     "express": "^4.15.2",
+    "html-metadata": "git://github.com/wikimedia/html-metadata.git",
     "mongoose": "^4.9.8",
+    "node-metainspector": "^1.3.0",
     "shortid": "^2.2.8"
   },
   "devDependencies": {},

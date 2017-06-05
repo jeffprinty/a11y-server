@@ -5,7 +5,6 @@ const bodyParser = require('body-parser');
 const short = require('shortid');
 const path = require('path');
 require('dotenv').config()
-var scrape = require('html-metadata');
 
 const app = express();
 const router = express.Router();
@@ -25,8 +24,6 @@ const AssessmentSchema = new Schema({
  shortId: String,
  checkValues: Array,
  checkedItems: Array,
- checkedFilters: Array,
- notApplicable: Array,
  notes: Object,
  team: String,
  owners: Object,
@@ -66,13 +63,9 @@ app.use(function(req, res, next) {
   next();
 });
 router.get('/', function(req, res) {
-  Team.find({}, (err,teams) => {
-    Assessment.find({}, (err, docs) => {
-      console.log("err", err);
-      res.json({
-        docs, teams
-      })
-    });
+  Assessment.find({}, (err, docs) => {
+    console.log("err", err);
+    res.json(docs)
   });
 });
 
@@ -99,17 +92,6 @@ router.post('/new', (req, res) => {
     }
   })
 });
-
-router.get('/delete/:id', (req, res) => {
-  Assessment.findByIdAndRemove( req.params.id, function(err,doc) {
-    if (err) {
-      res.send(err);
-    } else {
-      res.redirect('/');
-    }
-  })
-});
-
 router.post('/update/:id', (req, res) => {
   Assessment.findOneAndUpdate({shortId: req.params.id}, req.body, function(err,doc) {
     if (err) {
@@ -118,43 +100,6 @@ router.post('/update/:id', (req, res) => {
       res.send('successfully updated');
     }
   })
-});
-router.post('/create', (req, res) => {
-  const shortId = short.generate();
-  const now = Date.now();
-  const { url, team } = req.body;
-
-    const newAssessment = Object.assign({}, AssessmentDefaults, {
-      shortId,
-      updatedAt: now,
-      createdAt: now,
-      team, url
-    })
-
-  scrape(url).then(function(metadata){
-    const assessmentWithTitle = Object.assign({}, newAssessment, {
-      title: metadata.general.title
-    });
-    const assessment = new Assessment( assessmentWithTitle );
-
-    assessment.save(err => {
-      if (err) res.send(err);
-      res.redirect(`/${shortId}`);
-    })
-
-  }).catch(err => {
-    console.log(err)
-    // Passed value is not a URL, use as title
-    const assessmentWithTitle = Object.assign({}, newAssessment, {
-      title: url
-    });
-    const assessment = new Assessment( assessmentWithTitle );
-    assessment.save(err => {
-      if (err) res.send(err);
-      res.redirect(`/${shortId}`);
-    })
-  });
-
 });
 router.get('/create', (req, res) => {
   const shortId = short.generate();
@@ -204,9 +149,12 @@ function getTeams() {
 
 router.get('/:id', (req, res) => {
   Assessment.findOne({shortId: req.params.id}, (err, doc) => {
+    const { checkValues, checkedItems, title, url, shortId, team, owners, notes } = doc;
     Team.find({}, (err,teamData) => {
-      const docObj = Object.assign({}, {teams: teamData}, doc.toObject());
-      res.json(docObj);
+      res.json({
+        checkValues, checkedItems, title, url, shortId, team, owners, notes,
+        teams: teamData,
+      });
     });
   })
 });
